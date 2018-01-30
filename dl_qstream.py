@@ -37,7 +37,8 @@ class StdOutListener(tweepy.StreamListener):
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='Train')
-    parser.add_argument('--hashtags', default="hashtags.conf", help='List of hashtags. Default %(default)s')
+    parser.add_argument('--hashtags', default="hashtags.conf", help='List of hashtags. Default %(default)s. If listen_sample is True, these are ignored.')
+    parser.add_argument('--listen_sample', action="store_true", default=False, help='Listen sample stream. Default %(default)s')
     parser.add_argument('--outname', default="tweets", help='Name of the output file. Default %(default)s')
     parser.add_argument('--langs', default="fi,fr,en", help='Comma-seprated list of langs. Default %(default)s')
     parser.add_argument('--secrets', default="secrets.json", help='Json dictionary with consumer_key, consumer_secret, access_token, access_token_secret. Default %(default)s')
@@ -46,21 +47,26 @@ if __name__=="__main__":
     # In this example follow #programming tag
     # For more details refer to https://dev.twitter.com/docs/streaming-apis
 
+    langs=args.langs.split(",")
     htags=set()
-    with open(args.hashtags,"r") as f:
-        for line in f:
-            line=line.strip()
-            if not line:
-                continue
-            htags.add(line)
-    htags=sorted(htags)
-    print("STARTED", time.asctime(), (u", ".join(htags)), file=sys.stderr)
-    print("",file=sys.stderr)
+
+
+    if args.listen_sample==False:    
+        with open(args.hashtags,"r") as f:
+            for line in f:
+                line=line.strip()
+                if not line:
+                    continue
+                htags.add(line)
+        htags=sorted(htags)
+        print("STARTED", time.asctime(), (u", ".join(htags)),"\n",  file=sys.stderr)
+    else:
+        print("STARTED", time.asctime(), "Listening sample stream", "Language:", u", ".join(langs),"\n",file=sys.stderr)
 
     with open(args.secrets) as f:
         secrets=json.loads(f.read())
 
-    langs=args.langs.split(",")
+    
     files=sorted(glob.glob(args.outname+"_*.json.gz"))
     if not files:
         f_num=0
@@ -83,7 +89,10 @@ if __name__=="__main__":
             auth = tweepy.OAuthHandler(secrets["consumer_key"], secrets["consumer_secret"])
             auth.set_access_token(secrets["access_token"], secrets["access_token_secret"])
             stream = tweepy.Stream(auth, l)
-            stream.filter(track=htags,languages=langs)
+            if args.listen_sample:
+                stream.sample()
+            else:
+                stream.filter(track=htags,languages=langs)
         except:
             traceback.print_exc()
             time.sleep(10)
