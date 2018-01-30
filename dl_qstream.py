@@ -1,3 +1,5 @@
+import six
+assert six.PY3, "Run me with Python3"
 import tweepy
 import json
 import time
