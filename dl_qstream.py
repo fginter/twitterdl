@@ -1,4 +1,3 @@
-#-*- coding: utf-8 -*-
 import tweepy
 import json
 import time
@@ -25,16 +24,16 @@ class StdOutListener(tweepy.StreamListener):
         decoded = json.loads(data)
         
         if "lang" in decoded and decoded["lang"] in self.langs:
-            print >> self.f_log, decoded["lang"], decoded["text"].replace(u"\n",u" ").encode("utf-8")
+            print(decoded["lang"], decoded["text"].replace(u"\n",u" "),file=self.f_log)
             self.f_log.flush()
-            print >> self.f_out, data
-            print >> self.f_out
+            print(data,file=self.f_out)
+            print("",file=self.f_out)
         else:
             pass
         return True
 
     def on_error(self, status):
-        print "Error",status
+        print("Error",status)
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='Train')
@@ -48,15 +47,15 @@ if __name__=="__main__":
     # For more details refer to https://dev.twitter.com/docs/streaming-apis
 
     htags=set()
-    with codecs.open(args.hashtags,"r","utf-8") as f:
+    with open(args.hashtags,"r") as f:
         for line in f:
             line=line.strip()
             if not line:
                 continue
             htags.add(line)
     htags=sorted(htags)
-    print >> sys.stderr, "STARTED", time.asctime(), (u", ".join(htags)).encode("utf-8")
-    print >> sys.stderr
+    print("STARTED", time.asctime(), (u", ".join(htags)), file=sys.stderr)
+    print("",file=sys.stderr)
 
     with open(args.secrets) as f:
         secrets=json.loads(f.read())
@@ -73,8 +72,8 @@ if __name__=="__main__":
     if f_num>10000: #this should never happen
         sys.exit(1)
 
-    f_out=gzip.open("%s_%05d.json.gz"%(args.outname,f_num),"w")
-    f_log=gzip.open("%s_%05d.txt.gz"%(args.outname,f_num),"w")
+    f_out=gzip.open("%s_%05d.json.gz"%(args.outname,f_num),"wt")
+    f_log=gzip.open("%s_%05d.txt.gz"%(args.outname,f_num),"wt")
     
 
     #stream.filter(track=[],languages=["fi"])
